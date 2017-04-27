@@ -1,9 +1,9 @@
-Dictionary = require('../Dictionary/Dictionary.js');
-wordlist = require('../Dictionary/wordlist.js');
-commonWordList = require('../Dictionary/commonwordlist.js');
+const Dictionary = require('../Dictionary/Dictionary.js');
+// const wordlist = require('../Dictionary/wordlist.js');
+const commonWordList = require('../Dictionary/commonwordlist.js');
 
 const MIN_WORD_LENGTH = 3;
-const MAX_WORD_LENGTH = 5;
+const MAX_WORD_LENGTH = Infinity;
 
 const LETTER_FREQUENCIES = {
   A: 8.12,
@@ -36,37 +36,27 @@ const LETTER_FREQUENCIES = {
 
 const letterFrequencyTable = [];
 
-const dictionary = new Dictionary;
+// const dictionary = new Dictionary;
+const commonDictionary = new Dictionary;
 
-dictionary.bulkAddWords(wordlist);
-seedLetterFrequencyTable();
+// dictionary.bulkAddWords(wordlist);
+commonDictionary.bulkAddWords(commonWordList);
 
 function getPathStart(desiredPathLength){
     let newCards = [];
-    let newWord = randomWord(3 + Math.floor(Math.random() * 2));
-    let wordArr = [];
-    let updatedWord;
-    wordArr.push(newWord);
+    let newWord = randomWord(3 + Math.floor(Math.random() * 5));
+    let wordArr = [newWord];
+    let nextWord;
     let changes = 0;
     while (wordArr.length < desiredPathLength){
       let possible = getAllCommonReachableWords(wordArr, wordArr[changes]);
-      if (possible.length < 1) return getPathStart();
-      updatedWord = possible[Math.floor(Math.random() * possible.length)];
-      wordArr.push(updatedWord);
-      if (updatedWord.length >= wordArr[changes].length){
-        let diff;
-        let index = 0;
-        while (updatedWord.charAt(index) === wordArr[changes].charAt(index)){
-          index++;
-        }
-        diff = updatedWord[index];
-        newCards = newCards.concat(diff);
-      }
+      if (possible.length < 1) return {newWord: wordArr[0], targetWord: wordArr[wordArr.length-1]}
+      nextWord = possible[Math.floor(Math.random() * possible.length)];
+      wordArr.push(nextWord);
       changes++;
     }
     let targetWord = wordArr[wordArr.length - 1];
-    console.log('end of pathstart', wordArr, targetWord);
-    return {newWord, newCards, targetWord};
+    return {newWord, targetWord};
 }
 
 // function getStandardStart(){
@@ -79,9 +69,11 @@ function getPathStart(desiredPathLength){
 // }
 
 function randomWord(length) {
+  let count = 0;
   let temp = commonWordList[Math.floor(Math.random() * commonWordList.length)];
-  while (length && temp.length !== length){
+  while (count < 1000 && length && temp.length !== length){
     temp = commonWordList[Math.floor(Math.random() * commonWordList.length)];
+    count++;
   }
   return temp;
 }
@@ -90,36 +82,7 @@ function isValidWord(word) {
     return dictionary.search(word);
 }
 
-function getNewCard(currentCards = [], word = '', mostRecent = []) {
-  if (letterFrequencyTable.length === 0)seedLetterTable();
-
-  let invalid = currentCards.join('') + word + mostRecent.join('');
-
-  let letters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
-
-  let pick = letterFrequencyTable[Math.floor(Math.random() * letterFrequencyTable.length)];
-
-  while (invalid.includes(pick)) {
-    pick = letterFrequencyTable[Math.floor(Math.random() * letterFrequencyTable.length)];
-  }
-
-  return pick;
-
-}
-
-function seedLetterFrequencyTable(){
-  let letters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
-  let letterArr = letters.split('');
-  letterArr.forEach(letter => {
-    let desiredNumber = Math.round(LETTER_FREQUENCIES[letter] * 100);
-    while (desiredNumber){
-      letterFrequencyTable.push(letter);
-      desiredNumber--;
-    }
-  })
-}
-
-function getPossibleWords(word, cards = [], min=3, max=5) {
+function getPossibleWords(word, cards = [], min = 3, max = Infinity) {
   let possibleWords = [];
   const currentCards = cards === 'allLetters' ? 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('') : cards;
   //try removing each letter
@@ -160,7 +123,7 @@ function getAllCommonReachableWords(alreadyUsed = [], word, cards = 'ABCDEFGHIJK
   let possibleWords = [];
   const currentCards = cards;
   //try removing each letter
-  for (let i = 0 ; i < word.length;i++){
+  for (let i = 0 ; i < word.length ; i++){
     let newWord = word.slice(0, i) + word.slice(i + 1);
     if (newWord !== word && isCommonWord(newWord) && !alreadyUsed.includes(newWord)){
       possibleWords.push(newWord)
@@ -188,7 +151,7 @@ function getAllCommonReachableWords(alreadyUsed = [], word, cards = 'ABCDEFGHIJK
 }
 
 function isCommonWord(word){
-  return commonWordList.includes(word);
+  return commonDictionary.search(word);
 }
 
-module.exports = { letterFrequencyTable, getPathStart, dictionary, isValidWord, getPossibleWords, getAllCommonReachableWords }
+module.exports = { letterFrequencyTable, getPathStart, isValidWord, getPossibleWords, getAllCommonReachableWords, randomWord }

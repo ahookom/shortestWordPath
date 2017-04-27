@@ -1,6 +1,7 @@
 //This solution is based on Dijkstra's Algorithm.
+let { getAllCommonReachableWords } = require('./utils/wordutils.js')
 
-function navigate(numIntersects, roads, start, end){
+function navigate(start, end){
   //an object to store each intersection as a key and the name of the intersection to approach from as its value
   let approachFrom = {};
   //an object to store each intersection and the current shortest time to reach it
@@ -15,12 +16,12 @@ function navigate(numIntersects, roads, start, end){
 
   while (selected !== end){
     openSet = openSet.filter(a => a !== selected);
+    let neighbors = getAllCommonReachableWords(closedSet, selected);
     closedSet.push(selected);
-    let neighbors = getNeighbors(roads, selected);
-    neighbors.forEach((neighbor) => {
+    neighbors.forEach(neighbor => {
       if (!closedSet.includes(neighbor)){
         openSet.push(neighbor);
-        let addedCost = +lengthOfRoad(roads, selected, neighbor);
+        let addedCost = 1;
         if (!cost[neighbor] || cost[neighbor] > addedCost + cost[selected]){
           cost[neighbor] = addedCost + cost[selected];
           approachFrom[neighbor] = selected;
@@ -34,18 +35,6 @@ function navigate(numIntersects, roads, start, end){
 
   return getPath(approachFrom, start, end);
 
-}
-
-function lengthOfRoad(roads, selected, neighbor){
-  let possibleRoads = roads.filter(road => road.from === selected && road.to === neighbor);
-  let driveTimes = possibleRoads.map(a => a.drivingTime);
-  let shortest = Math.min.apply(null, driveTimes);
-  return shortest;
-}
-
-function getNeighbors(roads, selected){
-  let roadsFromSelected = roads.filter(road => road.from === selected);
-  return roadsFromSelected.map(road => road.to);
 }
 
 function lowestCostIntersection(openSet, cost){
@@ -69,3 +58,5 @@ function getPath(objOfBestFroms, start, end){
   }
   return returnArr.reverse();
 }
+
+module.exports = { navigate }

@@ -2,15 +2,15 @@
 that are each a distance of 1 (add,remove,change) from each other that go from
 the start to the finish?*/
 
-let { getAllCommonReachableWords, letterFrequencyTable, getPossibleWords } = require('./utils/wordutils.js')
+let { getAllCommonReachableWords } = require('./utils/wordutils.js')
 
-const startWord = 'LAY';
-const targetWord = 'JAN';
+const startWord = 'YET';
+const targetWord = 'TOUCH';
 const initialSize = 500;
 const minWordLength = 3;
-const maxWordLength = 5;
-const minChainLength = 2;
-const maxChainLength = 7;
+const maxWordLength = Infinity;
+const minChainLength = 4;
+const maxChainLength = 10;
 const initialPopulation = seedPopulation();
 
 function randomInt(min, max){
@@ -86,11 +86,36 @@ function fitnessFunction(phenotype) {
 
   score = 5 * lastWordinFromStart.split('').filter((letter, index) => letter === lastWordinFromFinish[index]).length
 
-	score -= (phenotype.fromStart.length + phenotype.fromFinish.length) * .5
+	score -= (phenotype.fromStart.length + phenotype.fromFinish.length) * .1
 
 	return score
 
 }
+
+function yourDiversityFunc(phenA, phenB){
+  let middlesForA = [phenA.fromStart[phenA.fromStart.length-1], phenA.fromFinish[phenA.fromFinish.length-1]]
+  let middlesForB = [phenB.fromStart[phenB.fromStart.length-1], phenB.fromFinish[phenB.fromFinish.length-1]]
+  let percentageUniquefromStart = middlesForA[0].split('').filter((char, index)=>char!==middlesForB[0][index]).length/middlesForA[0].length
+  let percentageUniquefromFinish = middlesForA[1].split('').filter((char, index)=>char!==middlesForB[1][index]).length/middlesForA[1].length
+  return percentageUniquefromStart + percentageUniquefromFinish / 2
+}
+
+function doesABeatBFunction(phenoTypeA, phenoTypeB) {
+
+  // if too genetically different to consider
+  if ( yourDiversityFunc(phenoTypeA, phenoTypeB) > 0.65 ) {
+    return false;
+  }
+
+  // if phenoTypeA isn't better than phenoTypeB
+  if ( fitnessFunction(phenoTypeA) <= fitnessFunction(phenoTypeB) ) {
+    return false;
+  }
+
+  // else phenoTypeA beats phenoTypeB
+  return true;
+}
+
 
 // var firstPhenotype = {
 // 	dummyKey: 'dummyValue'
@@ -103,7 +128,8 @@ var geneticAlgorithm = geneticAlgorithmConstructor({
     crossoverFunction: crossoverFunction,
     fitnessFunction: fitnessFunction,
     population: initialPopulation,
-		populationSize: initialSize
+		populationSize: initialSize,
+    doesABeatBFunction: doesABeatBFunction
 });
 
 console.log('Starting with:')
