@@ -3,19 +3,16 @@ that are each a distance of 1 (add,remove,change) from each other that go from
 the start to the finish?*/
 
 let { getAllCommonReachableWords } = require('./utils/wordutils.js')
+let { getRandomInt, getRandomPath } = require('./utils/randomutils.js')
 
-const startWord = 'SPY';
-const targetWord = 'MILLER';
+const startWord = 'BOLD';
+const targetWord = 'SCAM';
 const initialSize = 1000;
 const minWordLength = 3;
 const maxWordLength = 5;
 const minChainLength = 2;
 const maxChainLength = 30;
 const initialPopulation = seedPopulation(startWord, minWordLength, maxWordLength, initialSize, minChainLength, maxChainLength);
-
-function getRandomInt(min, max){
-  return min + (Math.floor(Math.random() * (max - min + 1)))
-}
 
 function seedPopulation(){
 	let initialPop = [];
@@ -24,19 +21,6 @@ function seedPopulation(){
     initialPop.push(getRandomPath(startWord, nextPathLength))
 	}
 	return initialPop;
-}
-
-function getRandomPath(seedWord, length, alreadyUsedWords = []){
-  let newPath = [seedWord];
-	while (newPath.length < length){
-		let mostRecentWord = newPath[newPath.length - 1];
-		let possibleWords = getAllCommonReachableWords(newPath.concat(alreadyUsedWords), mostRecentWord);
-		if (possibleWords.length){newPath.push(possibleWords[getRandomInt(0, possibleWords.length - 1)]);
-		} else {
-			break;
-		}
-	}
-	return newPath;
 }
 
 function mutationFunction(phenotype) {
@@ -77,11 +61,6 @@ function fitnessFunction(phenotype) {
 	return score
 
 }
-
-// var firstPhenotype = {
-// 	dummyKey: 'dummyValue'
-// 	// enter phenotype data here
-// }
 
 var geneticAlgorithmConstructor = require('geneticalgorithm')
 var geneticAlgorithm = geneticAlgorithmConstructor({
